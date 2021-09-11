@@ -1,0 +1,3 @@
+[2021-06-27 19:59:25,923][train.py][line:102][INFO] Optimizer: <class 'torch.optim.adam.Adam'>
+[2021-06-27 19:59:25,924][train.py][line:108][INFO] Start training!
+[2021-06-27 19:59:25,924][train.py][line:109][INFO] Using cuda
