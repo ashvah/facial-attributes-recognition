@@ -4,22 +4,15 @@
 import numpy as np
 from multiprocessing import Pool
 import logging
-from .Xception import XceptionModel
-from .CNN1 import CNN1Model
-from .CNN import CNNModel
-from .Simple_CNN import SimpleCNNModel
 from .resnet import ResModel
-from .resnet1 import Res1Model
-from .resnet2 import Res2Model
 from .resnet3 import Res3Model
 from .densenet import DenseModel
 from torchvision.transforms import transforms
 import torch
 import glob
 
-model_names = ['Xception', 'CNN', 'CNN_hairglass', 'Res', 'CNN1', 'Simple_CNN', 'Res1', 'Res2', 'Res3', 'Dense']
-models = [XceptionModel, CNNModel, CNNModel, ResModel, CNN1Model, SimpleCNNModel, Res1Model, Res2Model, Res3Model,
-          DenseModel]
+model_names = ['Res', 'Res3']
+models = [ResModel, Res3Model]
 model_dict = dict([(k, v) for k, v in zip(model_names, models)])
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

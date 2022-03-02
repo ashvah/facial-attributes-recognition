@@ -1,22 +1,24 @@
 # !/usr/bin/env python
 # -*- coding:utf8 -*-
 
-from .dataset import Fig_data
-from .Xception import XceptionModel
-from .CNN import CNNModel
-from .utils import get_logger, get_transform
+from dataset import Fig_data
+from utils import MAP_at_n
+from resnet import ResModel
+from resnet3 import Res3Model
+from utils import get_logger, get_transform
 import torch
 from torch.utils.data import DataLoader
 from sklearn.metrics import average_precision_score
+import torch.nn as nn
 import glob
 import warnings
 import argparse
 import numpy as np
 
-warnings.filterwarnings("ignore")
+# warnings.filterwarnings("ignore")
 
-model_names = ['Xception', 'CNN']
-models = [XceptionModel, CNNModel]
+model_names = ['Res', 'Res3']
+models = [ResModel, Res3Model]
 model_dict = dict([(k, v) for k, v in zip(model_names, models)])
 
 parser = argparse.ArgumentParser()
@@ -45,13 +47,16 @@ L2 = args.l2
 BATCH_SIZE = args.batch_size
 MAP = args.map
 
-img_dir = '../img_align_celeba'
+img_dir = '../img_align_celeb'
 train_file = '../partition/hair_train.txt'
 valid_file = '../partition/hair_valid.txt'
 test_file = '../partition/hair_test.txt'
 weight_dir = '../weights/' + MODEL_NAME
 log_dir = '../log/' + MODEL_NAME
-attr = ['gender', 'glass', 'hair']
+# attr = ['gender', 'glass', 'hair']
+# attr = ['eyeglasses', 'hair']
+# attr = ['eyeglasses']
+attr = ['hair']
 num_of_classes = len(attr) if attr else 40
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -82,9 +87,9 @@ def train():
     loss_f = loss_f.to(DEVICE)
 
     if OPTIM == "SGD":
-        optimizer = torch.optim.SGD(model.parameters(), lr=LR, momentum=MOMENTUM, weight_decay=L2)
+        optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, model.parameters()), lr=LR, momentum=MOMENTUM, weight_decay=L2)
     else:
-        optimizer = torch.optim.Adam(model.parameters(), lr=LR, weight_decay=L2)
+        optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, model.parameters()), lr=LR, weight_decay=L2)
     logger.info("Optimizer: " + str(type(optimizer)))
 
     train_loader = DataLoader(dataset=train_data, batch_size=BATCH_SIZE, shuffle=True, num_workers=NUM_OF_WORKERS)
@@ -137,7 +142,7 @@ def train():
                 # g = MAP_at_n(y_v.cpu().numpy(), label_v.cpu().numpy(), MAP)
                 g = average_precision_score(label_v.cpu().numpy().reshape(-1), y_v.cpu().numpy().reshape(-1))
                 if np.isnan(g):
-                    g = 0.0
+                    g=0.0
                 logger.info("Epoch {}: MAP@{}: {:.4}".format(e, MAP, g))
                 aver_map_at_n += g * feature_v.shape[0]
         aver_loss_v = aver_loss_v / VALID_SIZE
